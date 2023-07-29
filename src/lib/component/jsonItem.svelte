@@ -1,13 +1,14 @@
 {#if (editMode)}
-    <input
-        type="text"
-        class="w-full p-2 border rounded border-zinc-500 bg-zinc-800"
-        style={style}
-        value={getInputValue(item)}
-        on:input={onInputValueUpdate}
-        use:clickoutside={{ enabled: true, callback: onClickOutside }}
-        on:keyup|preventDefault={handleKeyUp}
-    />
+    <div class="flex items-center justify-center w-full px-1" style={style} use:clickoutside={{ enabled: true, callback: onClickOutside }}>
+        <input
+            type="text"
+            class="flex-grow p-2 border rounded border-zinc-500 bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+            value={getInputValue(item)}
+            on:input={onInputValueUpdate}
+            on:keyup|preventDefault={handleKeyUp}
+            bind:this={inputRef}
+        />
+    </div>
 {:else}
     {#if (item.type === 'object' || item.type === 'array')}
         <Tooltip label={getTitle(item)} class="w-full" color="cyan" openDelay={1000} style={style}>
@@ -17,8 +18,7 @@
                 title={getTitle(item)}
                 aria-label={getTitle(item)}
                 data-selected={selected}
-                on:click={onClickItem}
-                on:dblclick={handleDbClick}
+                on:click|preventDefault={onClickItem}
                 on:keyup
                 on:keydown
                 {tabindex}
@@ -48,6 +48,14 @@
                     {/if}
                 </div>
                 <div class="flex gap-1 items-center" >
+                    <UnstyledButton
+                        class="p-2 bg-sky-200 rounded-full group-hover:block hidden active:bg-sky-300 transition-colors"
+                        title="Edit"
+                        aria-label="Edit key or Value"
+                        on:click={handleEditClick}
+                    >
+                        <Pencil color="black" />
+                    </UnstyledButton>
                     <UnstyledButton
                         class="p-2 bg-rose-200 rounded-full group-hover:block hidden active:bg-rose-300 transition-colors"
                         title="Delete"
@@ -105,11 +113,11 @@
 {/if}
 
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { afterUpdate, createEventDispatcher, onMount } from 'svelte';
 	import type { JSONMetaInfo, JSONType } from './types';
 	import { getJsonType, normalizeJsonType } from './utils';
     import { Tooltip, UnstyledButton, InputWrapper, Input, RadioGroup, NativeSelect, Button, type SelectItem, NumberInput } from '@svelteuidev/core';
-    import { ChevronRight, Trash } from 'radix-icons-svelte';
+    import { ChevronRight, Trash, Pencil1 as Pencil } from 'radix-icons-svelte';
     import { clickoutside, useDebounce } from '@svelteuidev/composables';
 
     const jsonTypeSelectType: SelectItem[] = [
@@ -139,6 +147,8 @@
     export let style = ''
     export let isLastChild = false;
     export let tabindex = -1;
+
+    let inputRef: HTMLInputElement | undefined;
 
     let itemValue = item.value;
 
@@ -193,10 +203,13 @@
         }
     }
 
-    function handleDbClick() {
-        if (currentJsonValueType === 'object') {
+    function handleEditClick(e: Event) {
+        e.stopPropagation();
+        e.preventDefault();
+        console.log('edit click', item.type);
+        if (item.type === 'object') {
             editMode = true;
-        } else if (currentJsonValueType === 'array') {
+        } else if (item.type === 'array') {
             switch(typeof itemValue) {
                 case 'string': case 'boolean': case 'number':
                     editMode = true;
@@ -211,10 +224,10 @@
     }
 
     function getInputValue(item: JSONMetaInfo): string {
-        if (currentJsonValueType === 'object') {
+        if (item.type === 'object') {
             return newItemKey?.toString() ?? '';
         }
-        if (currentJsonValueType === 'array') {
+        if (item.type === 'array') {
             return JSON.stringify(item.value);
         }
         return '';
@@ -320,6 +333,11 @@
         });
         editMode = false;
     }
+
+    afterUpdate(() => {
+        if (!editMode) return;
+        inputRef?.focus();
+    })
 
 </script>
 
