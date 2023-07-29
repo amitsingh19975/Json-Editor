@@ -70,11 +70,12 @@
 	import JsonItem from './jsonItem.svelte';
 	import type { JSONMetaInfo, JSONType } from './types';
 	import { getJsonType, isArray, isObject, normalizeJsonType } from './utils';
-    import { afterUpdate, createEventDispatcher, onDestroy } from 'svelte';
+    import { afterUpdate, createEventDispatcher, onDestroy, onMount } from 'svelte';
     import { Input, Button } from '@svelteuidev/core';
     import { useDebounce, clickoutside } from '@svelteuidev/composables';
     import { MagnifyingGlass, Trash, Plus } from 'radix-icons-svelte';
 	import { evalMatchExpr, isErr, parseCommand } from './command';
+    import { browser } from '$app/environment';
 
     const dispatch = createEventDispatcher<{
         clicked: JSONMetaInfo,
@@ -141,10 +142,17 @@
         if (!hasFocus) return;
         onKeyupEvent(e);
     }
-    document.addEventListener('keydown', documentKeyDownEvent);
+
+    onMount(() => {
+        if (browser) {
+            document.addEventListener('keydown', documentKeyDownEvent);
+        }
+    })
 
     onDestroy(() => {
-        document.removeEventListener('keydown', documentKeyDownEvent);
+        if (browser) {
+            document.removeEventListener('keydown', documentKeyDownEvent);
+        }
     });
 
     function looseFocus() {
