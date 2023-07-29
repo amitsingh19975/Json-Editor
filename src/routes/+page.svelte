@@ -11,14 +11,36 @@
             <Text size='sm'>Choose File</Text>
         </Button>
     </Group>
+    <Modal opened={isJsonLoading} centered withCloseButton={false}>
+        <Center class="w-full h-full">
+            <Text>Loading {jsonName ? `'${jsonName}'` : 'JSON'} please wait...</Text>
+            <Loader class="ml-4" />
+        </Center>
+    </Modal>
+    {#if (error)}
+        <div class="absolute top-0 left-1/2 -translate-x-1/2">
+            <Notification title='Error' icon={getCrossIcon()} color='red'>
+                <Text size='sm'>{error}</Text>
+            </Notification>
+        </div>
+    {/if}
 </Center>
 
 
 <script lang="ts">
-    import { Center, Text, Button, Group } from '@svelteuidev/core'
+    import { Center, Text, Button, Group, Modal, Loader, Notification } from '@svelteuidev/core'
 	import { jsonNameStore, jsonStore } from '$lib/jsonStore';
 	import { goto } from '$app/navigation';
     import { base } from '$app/paths';
+    import { Cross2 } from 'radix-icons-svelte';
+
+    let isJsonLoading = false
+    let jsonName = ''
+    let error = ''
+
+    function getCrossIcon() {
+        return Cross2 as any;
+    }
 
     function promisifyFileRead(input: HTMLInputElement) {
         return new Promise<{
@@ -27,16 +49,23 @@
         }>((resolve, reject) => {
             input.onchange = () => {
                 const file = input.files?.[0]
-                if (!file) return
-                const reader = new FileReader()
-                reader.onload = () => {
-                    const text = reader.result?.toString()
-                    resolve({
-                        text,
-                        name: file.name
-                    })
+                if (!file) {
+                    reject(new Error('No file selected'))
+                    return
                 }
-                reader.readAsText(file)
+                try {
+                    const reader = new FileReader()
+                    reader.onload = () => {
+                        const text = reader.result?.toString()
+                        resolve({
+                            text,
+                            name: file.name
+                        })
+                    }
+                    reader.readAsText(file)
+                } catch (e) {
+                    reject(e)
+                }
             }
             input.onerror = () => {
                 reject(new Error('Error while reading file'))
@@ -51,12 +80,23 @@
         input.accept = '.json'
         const promise = promisifyFileRead(input)
         input.click()
-        const { text, name } = await promise;
-        if (!text) return
-        const json = JSON.parse(text)
-        jsonStore.set(json)
-        jsonNameStore.set(name)
-        goto(`${base}/editor`)
+        isJsonLoading = true;
+        try {
+            const { text, name } = await promise;
+            if (!text) return
+            const json = JSON.parse(text)
+            jsonStore.set(json)
+            jsonNameStore.set(name)
+            goto(`${base}/editor`)
+        } catch(e) {
+            if (e instanceof Error) error = e.message
+            else error = String(e)
+            setTimeout(() => {
+                error = ''
+            }, 2000)
+        } finally {
+            isJsonLoading = false;
+        }
     }
 </script>
     
