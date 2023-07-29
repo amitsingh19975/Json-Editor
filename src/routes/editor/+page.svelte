@@ -13,7 +13,7 @@
                     <Download class="w-5 h-5 mr-2" />
                     Download
                 </Button>
-                <Button variant="outline" color="white" use={[[clipboard, json]]} on:useclipboard={onCopy}>
+                <Button variant="outline" color="white" on:click={onCopy}>
                     <ClipboardCopy class="w-5 h-5 mr-2" />
                     Copy
                 </Button>
@@ -34,20 +34,19 @@
 
 <script lang="ts">
     import { AppShell, Header, ShellSection, Text, Anchor, Button, Notification } from '@svelteuidev/core';
-    import { clipboard } from '@svelteuidev/composables';
     import JsonView from '$lib/component/jsonView.svelte';
     import { Download, ClipboardCopy, Check } from 'radix-icons-svelte';
 	import { jsonNameStore, jsonStore } from '$lib/jsonStore';
     import { base } from '$app/paths';
     
     $: jsonName = $jsonNameStore;
-    $: json = JSON.stringify($jsonStore);
+    $: json = $jsonStore;
 
     let isCopied: boolean = false;
 
     function onDownloadJson() {
         const a = document.createElement('a');
-        const file = new Blob([json], { type: 'application/json' });
+        const file = new Blob([JSON.stringify(json)], { type: 'application/json' });
         a.href = URL.createObjectURL(file);
         a.download = jsonName;
         a.click();
@@ -57,7 +56,9 @@
         return Check as any;
     }
 
-    function onCopy() {
+    async function onCopy() {
+        if (('clipboard' in navigator) === false) return;
+        await navigator.clipboard.writeText(JSON.stringify(json));
         isCopied = true;
         setTimeout(() => {
             isCopied = false;
