@@ -206,7 +206,6 @@
     function handleEditClick(e: Event) {
         e.stopPropagation();
         e.preventDefault();
-        console.log('edit click', item.type);
         if (item.type === 'object') {
             editMode = true;
         } else if (item.type === 'array') {
