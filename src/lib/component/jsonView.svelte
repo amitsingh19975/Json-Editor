@@ -52,7 +52,7 @@
 	import { afterUpdate } from 'svelte';
     import JsonColumn from './jsonColumn.svelte';
 	import type { JSONMetaInfo, JSONType } from './types';
-	import { isObject } from './utils';
+	import { deepClone, isObject } from './utils';
     
     $: json = $jsonStore
     
@@ -124,24 +124,24 @@
             } else {
                 const temp = (current as any)[key]
                 if (Array.isArray(temp)) {
-                    temp.push(value)
+                    temp.push(deepClone(value))
                 } else {
                     if (oldItemKey != null) delete current[oldItemKey];
-                    current[key] = value
+                    current[key] = deepClone(value)
                 }
             }
         } else {
             if (key == null) {
-                current[lastKey] = value
+                current[lastKey] = deepClone(value)
             } else {
                 const temp = (current as any)[lastKey]
                 if (Array.isArray(temp)) {
-                    temp.splice(Number(key), 1, value)
+                    temp.splice(Number(key), 1, deepClone(value))
                 } else {
                     if (oldItemKey != null) {
                         delete temp[oldItemKey];
                     }
-                    temp[key] = value
+                    temp[key] = deepClone(value)
                 }
             }
         }

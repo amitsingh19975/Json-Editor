@@ -60,3 +60,7 @@ export function normalizeJsonValue(value: unknown) {
     if (isObject(value)) return value;
     return null;
 }
+
+export function deepClone(value: unknown): unknown {
+    return JSON.parse(JSON.stringify(value));
+}
