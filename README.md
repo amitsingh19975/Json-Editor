@@ -36,3 +36,26 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+
+## Command Grammar
+
+```bnf
+CommandExpr := Expr | '(' CommandExpr ')' | CommandExpr LogicalOperator CommandExpr
+Expr := StringLiteral | NumberLiteral | BoolLiteral | KeyField ':' Expr | BinaryExpr | UnaryExpr | empty
+BinaryExpr := (Expr '|' Expr) | (Expr '&' Expr)
+UnaryExpr := '!'Expr
+StringLiteral := Quotes? (Characters | TypeLiteral) Quotes?
+TypeLiteral := bool | boolean | string | number | null | object | array
+NumberLiteral := javascript_number
+BoolLiteral := false | true
+KeyField := 'key' | 'type' | 'value' | 'index'
+Quotes := '"' | "'"
+```
+
+### Examples
+
+```swift
+> $key: 'logo' | 'pages'
+> ($key: 'logo' | 'pages') & ($type: string | bool)
+> logo
+```
