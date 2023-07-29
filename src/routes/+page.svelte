@@ -91,6 +91,7 @@
         } catch(e) {
             if (e instanceof Error) error = e.message
             else error = String(e)
+            console.error(e)
             setTimeout(() => {
                 error = ''
             }, 2000)
