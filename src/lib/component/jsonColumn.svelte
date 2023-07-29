@@ -1,10 +1,10 @@
 <section aria-label="Json column items" class="h-full bg-stone-800 border border-zinc-800 rounded flex flex-col shadow-sm shadow-stone-700 overflow-hidden" bind:this={columnItemRef}>
-    <header class="bg-stone-900 py-3 px-2 border-b border-stone-800 flex flex-col justify-center gap-2 w-full">
+    <header class="bg-stone-900 py-3 px-2 border-b border-stone-800 flex flex-col justify-center gap-2 w-full" bind:this={headerRef}>
         <div class="flex justify-between items-center">
             <span class="text-stone-400 text-lg mr-2">{normalizeJsonType(jsonType)}</span>
             <div class="flex items-center gap-2">
                 {#if (isObject(normalizedJson) || isArray(normalizedJson)) }
-                    <Button variant="subtle" class="px-3" on:click={() => dispatch('add', { depth, keyPath })} title="Add item" aria-label="Add json item">
+                    <Button variant="subtle" class="px-3" on:click={onItemAdd} title="Add item" aria-label="Add json item">
                         <Plus size={18} />
                     </Button>
                 {/if}
@@ -30,7 +30,7 @@
         {#if (filteredJsonMeta.length > 1)}
             <div use:clickoutside={{ enabled: true, callback: looseFocus  }}>
                 <VirtualList
-                    height="1000"
+                    height={listHeight}
                     width="100%"
                     itemCount={filteredJsonMeta.length}
                     itemSize={46}
@@ -70,7 +70,7 @@
 	import JsonItem from './jsonItem.svelte';
 	import type { JSONMetaInfo, JSONType } from './types';
 	import { getJsonType, isArray, isObject, normalizeJsonType } from './utils';
-    import { afterUpdate, createEventDispatcher, onDestroy, onMount } from 'svelte';
+    import { afterUpdate, createEventDispatcher, onDestroy, onMount, tick } from 'svelte';
     import { Input, Button } from '@svelteuidev/core';
     import { useDebounce, clickoutside } from '@svelteuidev/composables';
     import { MagnifyingGlass, Trash, Plus } from 'radix-icons-svelte';
@@ -301,14 +301,33 @@
     }
 
     let columnItemRef: HTMLElement;
+    let headerRef: HTMLElement;
+
+    function calculateListHeight(parentView: HTMLElement|undefined, headerView: HTMLElement|undefined) {
+        if (!parentView || !headerView) return 500;
+        const headerHeight = headerView.getBoundingClientRect().height;
+        const totalHeight = parentView.getBoundingClientRect().height;
+        return totalHeight - headerHeight - 4;
+    }
+
+    $: listHeight = calculateListHeight(columnItemRef, headerRef);
+
+    function focusCurrentColumn() {
+        if (!columnItemRef) return;
+        columnItemRef.scrollIntoView({
+            behavior: 'instant',
+            block: 'nearest',
+            inline: 'start',
+        });
+    }
 
     afterUpdate(() => {
-        if (columnItemRef && hasFocus) {
-            columnItemRef.scrollIntoView({
-                behavior: 'smooth',
-                block: 'nearest',
-                inline: 'start',
-            });
-        }
+        if (hasFocus) focusCurrentColumn();
     })
+
+    async function onItemAdd() {
+        patternString = '';
+        dispatch('add', { depth, keyPath });
+    }
+    
 </script>
