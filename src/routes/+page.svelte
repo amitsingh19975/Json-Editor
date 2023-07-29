@@ -18,6 +18,7 @@
     import { Center, Text, Button, Group } from '@svelteuidev/core'
 	import { jsonNameStore, jsonStore } from '$lib/jsonStore';
 	import { goto } from '$app/navigation';
+    import { base } from '$app/paths';
 
     function promisifyFileRead(input: HTMLInputElement) {
         return new Promise<{
@@ -55,7 +56,7 @@
         const json = JSON.parse(text)
         jsonStore.set(json)
         jsonNameStore.set(name)
-        goto('/editor')
+        goto(`${base}/editor`)
     }
 </script>
     

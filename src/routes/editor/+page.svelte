@@ -2,7 +2,7 @@
     <Header slot="header" height="4rem">
         <div class="h-full px-4 w-full flex items-center justify-between">
             <div class="flex flex-grow">
-                <Anchor href="/">
+                <Anchor href={base}>
                     <Text size="xl" weight="bold">
                         <span class="text-sky-400">Json Editor</span>
                     </Text>
@@ -38,6 +38,7 @@
     import JsonView from '$lib/component/jsonView.svelte';
     import { Download, ClipboardCopy, Check } from 'radix-icons-svelte';
 	import { jsonNameStore, jsonStore } from '$lib/jsonStore';
+    import { base } from '$app/paths';
     
     $: jsonName = $jsonNameStore;
     $: json = JSON.stringify($jsonStore);
