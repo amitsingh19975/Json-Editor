@@ -241,10 +241,10 @@
             value = e.currentTarget.value;
         }
         
-        if (currentJsonValueType === 'object') {
+        if (item.type === 'object') {
             newItemKey = value;
         }
-        if (currentJsonValueType === 'array') {
+        if (item.type === 'array') {
             itemValue = JSON.parse(value);
         }
     }

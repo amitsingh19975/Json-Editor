@@ -100,6 +100,27 @@
         keyPath = keyPath
     }
 
+    function getSecondLastObject(obj: unknown, depth: number, keypath: typeof keyPath): [unknown, PropertyKey | undefined] {
+        let current = obj;
+        for (let i = 1; i < depth; i++) {
+            const tempKey = keypath[i];
+            if (tempKey == null || !isObject(current)) break;
+            current = current[tempKey]
+        }
+        const lastKey = keypath[depth];
+        return [current, lastKey]
+    }
+
+    function renameKey(obj: unknown, oldKey: PropertyKey | undefined, newKey: PropertyKey | undefined) {
+        if (!isObject(obj) || oldKey === newKey || (oldKey == null) || (newKey == null)) return;
+        if (!(oldKey in obj)) {
+            obj[newKey] = obj[oldKey];
+            return;
+        }
+        Object.defineProperty(obj, newKey, Object.getOwnPropertyDescriptor(obj, oldKey)!)
+        delete obj[oldKey];
+    }
+
     function onItemUpdate(
         event: CustomEvent<{
             oldKey?: JSONMetaInfo['key'],
@@ -113,43 +134,34 @@
         const data = event.detail
         const path = data.keyPath;
         const key = data.key;
-        const value = data.value;
+        const value = deepClone(data.value);
         const depth = data.depth;
         const oldItemKey = data.oldKey;
 
-        let current = json;
-        for (let i = 1; i < depth; i++) {
-            const tempKey = path[i];
-            if (tempKey == null || !isObject(current)) break;
-            current = current[tempKey]
-        }
+        const [current, lastKey] = getSecondLastObject(json, depth, path);
 
-        const lastKey = path[depth];
         if (!isObject(current)) return;
+
         if (lastKey == null) {
             if (key == null) {
                 jsonStore.set(value)
             } else {
-                const temp = (current as any)[key]
+                const temp = current[key]
                 if (Array.isArray(temp)) {
-                    temp.push(deepClone(value))
+                    temp.push(value)
                 } else {
-                    if (oldItemKey != null) delete current[oldItemKey];
-                    current[key] = deepClone(value)
+                    renameKey(current, oldItemKey, key)
                 }
             }
         } else {
             if (key == null) {
-                current[lastKey] = deepClone(value)
+                current[lastKey] = value;
             } else {
-                const temp = (current as any)[lastKey]
+                const temp = current[lastKey]
                 if (Array.isArray(temp)) {
-                    temp.splice(Number(key), 1, deepClone(value))
-                } else {
-                    if (oldItemKey != null) {
-                        delete temp[oldItemKey];
-                    }
-                    temp[key] = deepClone(value)
+                    temp.splice(Number(key), 1, value)
+                } else if (isObject(temp)) {
+                    renameKey(temp, oldItemKey, key)
                 }
             }
         }
@@ -168,14 +180,8 @@
             return;
         }
 
-        let current = json;
-        for (let i = 1; i < depth; i++) {
-            const tempKey = path[i];
-            if (tempKey == null || !isObject(current)) break;
-            current = current[tempKey]
-        }
+        const [current, lastKey] = getSecondLastObject(json, depth, path);
 
-        const lastKey = path[depth];
         if (lastKey == null || !isObject(current)) return;
         if (Array.isArray(current)) {
             current.splice(Number(lastKey), 1)
@@ -203,15 +209,10 @@
         const depth = data.depth;
         const path = data.keyPath;
 
-        let current = json;
-        for (let i = 1; i < depth; i++) {
-            const tempKey = path[i];
-            if (tempKey == null || !isObject(current)) break;
-            current = current[tempKey]
-        }
+        const [current, lastKey] = getSecondLastObject(json, depth, path);
 
-        const lastKey = path[depth];
         if (!isObject(current)) return;
+
         if (lastKey == null) {
             if (Array.isArray(current)) {
                 current.push(null)
@@ -238,14 +239,8 @@
         const depth = data.depth;
         const path = data.keyPath;
 
-        let current = json;
-        for (let i = 1; i < depth; i++) {
-            const tempKey = path[i];
-            if (tempKey == null || !isObject(current)) break;
-            current = current[tempKey]
-        }
+        const [current, lastKey] = getSecondLastObject(json, depth, path);
 
-        const lastKey = path[depth];
         if (!isObject(current)) return;
         if (lastKey == null) {
             if (Array.isArray(current)) {

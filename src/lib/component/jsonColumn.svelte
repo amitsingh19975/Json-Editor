@@ -37,8 +37,7 @@
                     width="100%"
                     itemCount={filteredJsonMeta.length}
                     itemSize={46}
-                    bind:scrollToIndex={scrollToIndex}
-                    getKey={(index) => filteredJsonMeta[index].key}>
+                    bind:scrollToIndex={scrollToIndex}>
                     <JsonItem
                         slot="item"
                         let:index
