@@ -150,7 +150,8 @@
                 if (Array.isArray(temp)) {
                     temp.push(value)
                 } else {
-                    renameKey(current, oldItemKey, key)
+                    renameKey(current, oldItemKey, key);
+                    current[key] = value;
                 }
             }
         } else {
@@ -161,7 +162,8 @@
                 if (Array.isArray(temp)) {
                     temp.splice(Number(key), 1, value)
                 } else if (isObject(temp)) {
-                    renameKey(temp, oldItemKey, key)
+                    renameKey(temp, oldItemKey, key);
+                    current[key] = value;
                 }
             }
         }
