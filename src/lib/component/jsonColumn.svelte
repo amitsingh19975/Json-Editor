@@ -3,6 +3,9 @@
         <div class="flex justify-between items-center">
             <span class="text-stone-400 text-lg mr-2">{normalizeJsonType(jsonType)}</span>
             <div class="flex items-center gap-2">
+                <Button variant="subtle" color="green" class="px-3" on:click={() => dispatch('showEditor', {depth, keyPath})} title="Open code editor" aria-label="Open code editor">
+                    <Code size={18} />
+                </Button>
                 {#if (isObject(normalizedJson) || isArray(normalizedJson)) }
                     <Button variant="subtle" class="px-3" on:click={onItemAdd} title="Add item" aria-label="Add json item">
                         <Plus size={18} />
@@ -73,7 +76,7 @@
     import { afterUpdate, createEventDispatcher, onDestroy, onMount, tick } from 'svelte';
     import { Input, Button } from '@svelteuidev/core';
     import { useDebounce, clickoutside } from '@svelteuidev/composables';
-    import { MagnifyingGlass, Trash, Plus } from 'radix-icons-svelte';
+    import { MagnifyingGlass, Trash, Plus, Code } from 'radix-icons-svelte';
 	import { evalMatchExpr, isErr, parseCommand } from './command';
     import { browser } from '$app/environment';
 
@@ -101,6 +104,10 @@
             value: unknown,
             depth: number,
             type: JSONType,
+            keyPath: Array<PropertyKey|undefined>
+        },
+        showEditor: {
+            depth: number,
             keyPath: Array<PropertyKey|undefined>
         }
     }>();

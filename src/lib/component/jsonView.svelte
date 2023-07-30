@@ -9,7 +9,7 @@
                         </Anchor>
                     </Breadcrumbs.Item>
                     {#each keyPath as key, index (`${key?.toString()}-${index}`)}
-                        {#if index > 0}
+                        {#if (index > 0) && (showEditor ? index <= editorViewJsonDepth : true)}
                             <Breadcrumbs.Item>
                                 <Anchor>
                                     <span class="text-white">{key}</span>
@@ -23,25 +23,30 @@
     </nav>
     <section
         aria-label="json explorer"
-        class="grid grid-flow-col grid-rows-1 w-full overflow-x-auto justify-start" style="grid-auto-columns: 25rem;"
+        class="grid grid-flow-col grid-rows-1 w-full overflow-x-auto justify-start" style="grid-auto-columns: {showEditor ? '1fr' : '25rem'};"
         bind:this={itemContainerRef}
     >
-        {#each keyPath as key, index (`${key?.toString()}-${index}`)}
-            <JsonColumn
-                json={json}
-                depth={index}
-                keyPath={keyPath}
-                hasFocus={focusedColumnIndex === index}
-                on:blur={() => focusedColumnIndex = -1}
-                on:focusNext={focusNext}
-                on:focusPrevious={focusPrevious}
-                on:clicked={(e) => handleClick(e, index + 1)}
-                on:itemUpdate={onItemUpdate}
-                on:add={onItemAdd}
-                on:removeColumn={onItemColumnRemove}
-                on:removeItem={onItemRemove}
-            />
-        {/each}
+        {#if !showEditor}
+            {#each keyPath as key, index (`${key?.toString()}-${index}`)}
+                <JsonColumn
+                    json={json}
+                    depth={index}
+                    keyPath={keyPath}
+                    hasFocus={focusedColumnIndex === index}
+                    on:blur={() => focusedColumnIndex = -1}
+                    on:focusNext={focusNext}
+                    on:focusPrevious={focusPrevious}
+                    on:clicked={(e) => handleClick(e, index + 1)}
+                    on:itemUpdate={onItemUpdate}
+                    on:add={onItemAdd}
+                    on:removeColumn={onItemColumnRemove}
+                    on:removeItem={onItemRemove}
+                    on:showEditor={onShowEditor}
+                />
+            {/each}
+        {:else}
+            <EditorView {json} {keyPath} depth={editorViewJsonDepth} on:hideEditor={onHideEditor}></EditorView>
+        {/if}
     </section>
 </div>
 
@@ -53,6 +58,7 @@
     import JsonColumn from './jsonColumn.svelte';
 	import type { JSONMetaInfo, JSONType } from './types';
 	import { deepClone, isObject } from './utils';
+    import EditorView from './editorView.svelte';
     
     $: json = $jsonStore
     
@@ -61,6 +67,8 @@
     let breadcrumbsRef: HTMLDivElement | undefined;
     let itemContainerRef: HTMLElement | undefined;
     let focusedColumnIndex = -1;
+    let showEditor = false;
+    let editorViewJsonDepth = 0;
 
     afterUpdate(() => {
         if (!breadcrumbsRef) return;
@@ -255,6 +263,16 @@
         }
 
         jsonStore.set(json)
+    }
+
+    function onShowEditor(e: CustomEvent<{ depth: number, keyPath: typeof keyPath }>) {
+        const data = e.detail
+        editorViewJsonDepth = data.depth
+        showEditor = true
+    }
+
+    function onHideEditor() {
+        showEditor = false
     }
 
     
